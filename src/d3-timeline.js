@@ -29,6 +29,7 @@
         itemHeight = 20,
         itemMargin = 5,
         showTimeAxis = true,
+        appendGElements = true;
         showTodayLine = false,
         showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
         showBorderLine = false,
@@ -36,7 +37,13 @@
       ;
 
     function timeline (gParent) {
-      var g = gParent.append("g");
+      
+      if (appendGElements) {
+        var g = gParent.append("g");
+      } else {
+        var g = gParent.select("g");
+      }
+
       var gParentSize = gParent[0][0].getBoundingClientRect();
 
       var gParentItem = d3.select(gParent[0][0]);
@@ -496,6 +503,11 @@
 
     timeline.showTimeAxis = function (timeAxis) {
       showTimeAxis = timeAxis;
+      return timeline;
+    };
+
+    timeline.appendGElements = function (append) {
+      appendGElements = append;
       return timeline;
     };
 

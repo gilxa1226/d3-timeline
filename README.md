@@ -280,5 +280,12 @@ d3.timeline()
 ###.showTimeAxis(true | false)
 Allows the axis to be turned off.  Defaults to true.
 
+###.appendGElements(true | false)
+Used to determine whether or not the <g> elements within the <svg> blocks are
+dynamically generated or selected.  If they are dynamically generated
+any automated refresh of data such as an AngularJS refresh within a directive
+will cause a new <g> element to be created.  If this is set to false,
+then you must already have provided a <g> element within your HTML file.
+
 ##License
 MIT
