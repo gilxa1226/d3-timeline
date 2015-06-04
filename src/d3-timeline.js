@@ -28,8 +28,8 @@
         timeIsRelative = false,
         itemHeight = 20,
         itemMargin = 5,
+        appendGElements = false;
         showTimeAxis = true,
-        appendGElements = true;
         showTodayLine = false,
         showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
         showBorderLine = false,
@@ -43,7 +43,7 @@
       } else {
         var g = gParent.select("g");
       }
-
+      
       var gParentSize = gParent[0][0].getBoundingClientRect();
 
       var gParentItem = d3.select(gParent[0][0]);
@@ -149,12 +149,24 @@
             ;
           }
 
-          g.selectAll("svg").data(data).enter()
+          // Select the 'display' elements within the g and bind to the data, this will allow us to update if data 
+          // changes, or create and delete as new data is added or data is removed from the dataset.  Essentially 
+          // allowing us to live update the timeline.
+          var bar = g.selectAll(display).data(data);
+
+          bar.enter()
             .append(display)
+            .filter(function(d) { return d.ending_time > beginning})
             .attr("x", getXPos)
             .attr("y", getStackPosition)
             .attr("width", function (d, i) {
-              return (d.ending_time - d.starting_time) * scaleFactor;
+              // Adjust the width when the X position is < beginning and therefore needs to be adjusted to 
+              // remain inside the <g> container
+              if ( d.starting_time < beginning ) {
+                return ((d.ending_time - beginning) * scaleFactor);
+              } else {
+                return (d.ending_time - d.starting_time) * scaleFactor;
+              }
             })
             .attr("cy", getStackPosition)
             .attr("cx", getXPos)
@@ -188,7 +200,56 @@
             })
           ;
 
-          g.selectAll("svg").data(data).enter()
+          bar
+            .filter(function(d) { return d.ending_time > beginning})
+            .attr("x", getXPos)
+            .attr("y", getStackPosition)
+            .attr("width", function (d, i) {
+              // Adjust the width when the X position is < beginning and therefore needs to be adjusted to 
+              // remain inside the <g> container
+              if ( d.starting_time < beginning ) {
+                return ((d.ending_time - beginning) * scaleFactor);
+              } else {
+                return (d.ending_time - d.starting_time) * scaleFactor;
+              }
+            })
+            .attr("cy", getStackPosition)
+            .attr("cx", getXPos)
+            .attr("r", itemHeight / 2)
+            .attr("height", itemHeight)
+            .style("fill", function(d, i){
+              if (d.color) return d.color;
+              if( colorPropertyName ){
+                return colorCycle( datum[colorPropertyName] );
+              }
+              return colorCycle(index);
+            })
+            .on("mousemove", function (d, i) {
+              hover(d, index, datum);
+            })
+            .on("mouseover", function (d, i) {
+              mouseover(d, i, datum);
+            })
+            .on("mouseout", function (d, i) {
+              mouseout(d, i, datum);
+            })
+            .on("click", function (d, i) {
+              click(d, index, datum);
+            })
+            .attr("id", function (d, i) {
+              if (hasId){
+                return "timelineItem_"+datum.id;
+              }else{
+                return "timelineItem_"+index;
+              }
+            })
+          ;
+
+          bar.exit().remove();
+
+          var textLabels = g.selectAll("text").data(data);
+
+          textLabels.enter()
             .append("text")
             .attr("x", getXTextPos)
             .attr("y", getStackTextPosition)
@@ -196,6 +257,8 @@
               return d.label;
             })
           ;
+
+          textLabels.exit().remove();
 
           if (rowSeperatorsColor) {
             var lineYAxis = ( itemHeight + itemMargin / 2 + margin.top + (itemHeight + itemMargin) * yAxisMapping[index]);
@@ -290,7 +353,9 @@
       }
 
       function getXPos(d, i) {
-        return margin.left + (d.starting_time - beginning) * scaleFactor;
+        // Adjusts the X position when x < margin.left in order to keep 
+        // the rectangle build properly
+        return (d.starting_time < beginning) ? margin.left: margin.left + (d.starting_time - beginning) * scaleFactor;
       }
 
       function getXTextPos(d, i) {
