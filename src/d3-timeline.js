@@ -28,7 +28,7 @@
         timeIsRelative = false,
         itemHeight = 20,
         itemMargin = 5,
-        appendGElements = false;
+        appendGElements = true;
         showTimeAxis = true,
         showTodayLine = false,
         showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
